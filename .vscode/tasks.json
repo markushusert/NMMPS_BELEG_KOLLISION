@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "build_program",
+			"command": "make",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"dependsOn": [
+				"dependency"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+		},
+		{
+			"label": "dependency",
+			"command": "make",
+			"args": ["depend"],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			
+		}
+	]
+}

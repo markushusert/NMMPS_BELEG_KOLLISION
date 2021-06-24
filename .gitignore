@@ -1,3 +1,5 @@
 *.o
 *.mod
 main
+test_git
+valgrind*

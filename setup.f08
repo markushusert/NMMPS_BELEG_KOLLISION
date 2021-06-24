@@ -1,6 +1,6 @@
 module setup
-    use type_particle
-    use collisions
+    use type_particle,only: Particle,array_of_particles
+    use collision_list,only: collisionpartners,tab_list
     implicit none
 
     !---------Variables
@@ -16,10 +16,13 @@ module setup
 
     contains
         subroutine user_input()
-            !set Variables
-            !currently just hardcoded some user-inputs
-            Np=100!Set number of particles
+            
+            !TODO set variables defined above
+            t_ges=1.0
+            dt=0.1
+            Np=100!Set number of particles (hardcoded for now)
             call alloclist()
+            !TODO fill attributes of particles in array_of_particles
 
         end subroutine user_input
         subroutine alloclist()
