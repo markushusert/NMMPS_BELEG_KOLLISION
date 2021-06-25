@@ -118,10 +118,12 @@ module linked_list
       type(list_t), pointer :: self
       integer, dimension(:), intent(in) :: data
   
-      if (.false. .and.associated(self%data)) then
+      if (associated(self%data)) then
          deallocate(self%data)
          nullify(self%data)
       end if
+      
+      allocate(self%data(size(data)))
       self%data = data
     end subroutine list_put
   
