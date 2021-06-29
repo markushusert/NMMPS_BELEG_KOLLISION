@@ -3,14 +3,14 @@ module linked_list_demo
     use linked_list
 
     implicit none
-    type :: pair
+    type :: pair_demo
         integer,DIMENSION(2)::partners
-    end type pair
+    end type pair_demo
 
     ! A trick to allow us to store pointers in the list
-    type :: pair_ptr
-        type(pair), pointer :: p
-    end type pair_ptr
+    type :: pair_demo_ptr
+        type(pair_demo), pointer :: p
+    end type pair_demo_ptr
 
     
     
@@ -20,9 +20,9 @@ module linked_list_demo
         type(list_t),pointer::start_node
         type(list_t),pointer::next_node
         integer iter
-        type(pair),dimension(3),target::collision_partners !dummy collision partners we want to store
-        type(pair),target::new_pair
-        type(pair_ptr)::pointer_to_collision_partners
+        type(pair_demo),dimension(3),target::collision_partners !dummy collision partners we want to store
+        type(pair_demo),target::new_pair_demo
+        type(pair_demo_ptr)::pointer_to_collision_partners
         collision_partners(1)%partners=[1,2]
         collision_partners(2)%partners=[3,4]
         collision_partners(3)%partners=[5,6]
@@ -58,9 +58,9 @@ module linked_list_demo
 
         print *,"manipulating list"
 
-        print *,"changing first partner of first pair to 7"
-        new_pair%partners=[7,2]
-        pointer_to_collision_partners%p=>new_pair
+        print *,"changing first partner of first pair_demo to 7"
+        new_pair_demo%partners=[7,2]
+        pointer_to_collision_partners%p=>new_pair_demo
         call list_put(list_next(start_node),transfer(pointer_to_collision_partners,list_data))
 
 
