@@ -141,7 +141,6 @@ module collision_list_module
                     call exit()
                 end if
                 temp=>get_next(current_element,nextflag)
-                print *,"element at position",loc(current_element),"next_element",loc(tempflag)
                 call print_collision(data)
             end do
         end subroutine print_list

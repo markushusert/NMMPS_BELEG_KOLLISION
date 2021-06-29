@@ -4,6 +4,7 @@ program main
     use type_particle
     use collisions
     use solid_dynamics
+    use statistics
     use plot
     use linked_list_demo
 
@@ -11,7 +12,6 @@ program main
     integer::n_steps,iter_step
     type(Particle)::colliding_particles(2)
     type(collision)::next_crash
-    integer id_of_colliding_particles(2)
     logical any_collisions_left
     real acctim
 
@@ -27,25 +27,27 @@ program main
 
         call collision_detection(array_of_particles)
 
-        call sort_list()
-
-        next_crash=next_collision(any_collisions_left)
-
         !-----------EVENT-DRIVEN-HARD-SPHERE
-        do while (any_collisions_left)
+        do 
+            next_crash=next_collision(any_collisions_left)
+
+            if (.not.any_collisions_left) then
+                exit !break out of loop
+            end if
             
             call move(next_crash%time-acctim,array_of_particles)
 
             acctim=next_crash%time
             
-            colliding_particles(:)=array_of_particles(id_of_colliding_particles)
+            colliding_particles(:)=array_of_particles(next_crash%partners)
 
             call collision_calculation(colliding_particles)
 
-            call collision_update(array_of_particles,id_of_colliding_particles)
+            call collision_update(array_of_particles,next_crash%partners)
 
-            next_crash=next_collision(any_collisions_left)
         end do
+        
+        time=time+dt
         
         call write_plot_file(array_of_particles)
     end do
