@@ -57,6 +57,6 @@ program main
         !call  execute_demo()
         call collision_list_demo
     end if
-    
+    print *,"----------------programm finished-------------------"
 end program main
 
