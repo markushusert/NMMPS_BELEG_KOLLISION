@@ -10,10 +10,10 @@ program main
     implicit none
     integer::n_steps,iter_step
     type(Particle)::colliding_particles(2)
+    type(collision)::next_crash
     integer id_of_colliding_particles(2)
+    logical any_collisions_left
     real acctim
-    real time_next_collision !measured from the start of the timestep
-    !so that we do not need to update collision timeings after each move
 
     !-----------SETUP
     print *,"starting program"
@@ -29,23 +29,22 @@ program main
 
         call sort_list()
 
-        time_next_collision=10000.0!insert first node of linked list here
+        next_crash=next_collision(any_collisions_left)
 
         !-----------EVENT-DRIVEN-HARD-SPHERE
-        do while (time_next_collision.le.dt)
-            call move(time_next_collision-acctim,array_of_particles)
-
-            acctim=time_next_collision
+        do while (any_collisions_left)
             
-            id_of_colliding_particles=collisionpartners(:,1)
+            call move(next_crash%time-acctim,array_of_particles)
 
+            acctim=next_crash%time
+            
             colliding_particles(:)=array_of_particles(id_of_colliding_particles)
 
             call collision_calculation(colliding_particles)
 
             call collision_update(array_of_particles,id_of_colliding_particles)
 
-            time_next_collision=tab_list(1)
+            next_crash=next_collision(any_collisions_left)
         end do
         
         call write_plot_file(array_of_particles)
@@ -53,7 +52,8 @@ program main
 
     if (.true.) then
         print *,"running linked list demo"
-        call  execute_demo()
+        !call  execute_demo()
+        call collision_list_demo
     end if
     
 end program main

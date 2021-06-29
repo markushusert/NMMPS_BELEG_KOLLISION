@@ -14,6 +14,8 @@ module linked_list
     public :: list_get
     public :: list_next
     public :: list_delnext
+    public :: list_insert_node
+    public :: list_cut_next
   
     ! A public variable to use as a MOLD for transfer()
     integer, dimension(:), allocatable :: list_data
@@ -88,12 +90,33 @@ module linked_list
     end subroutine list_delnext
  
     ! Return the next node after SELF
-    function list_next(self) result(next)
+    function list_next(self) result(next_node)
       type(list_t), pointer :: self
-      type(list_t), pointer :: next
-      next => self%next
+      type(list_t), pointer :: next_node
+      next_node => self%next
     end function list_next
-  
+    
+    function list_cut_next(self) result(next_node)
+      type(list_t), pointer :: self
+      type(list_t), pointer :: next_node
+      next_node => self%next
+
+      !remove next_node by having self point to its next 
+      self%next=>next_node%next
+    end function list_cut_next
+
+    subroutine list_insert_node(self,node_to_insert)
+      type(list_t), pointer,intent(inout) :: self
+      type(list_t), pointer,intent(inout) :: node_to_insert
+      type(list_t), pointer :: next_node
+
+      !if a node was following after self, make node_to_insert point to it
+      if (associated(self%next)) then
+         next_node=>self%next
+         node_to_insert%next=>next_node
+      end if
+      self%next=>node_to_insert
+   end subroutine list_insert_node
     ! Insert a list node after SELF containing DATA (optional)
     subroutine list_insert(self, data)
       type(list_t), pointer :: self

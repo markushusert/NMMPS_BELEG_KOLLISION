@@ -1,6 +1,6 @@
 module setup
     use type_particle,only: Particle,array_of_particles
-    use collision_list,only: collisionpartners,tab_list
+    use collision_list_module,only: init_list
     implicit none
 
     !---------Variables
@@ -28,7 +28,6 @@ module setup
         subroutine alloclist()
             !allocates dynamically sized arrays
             allocate(array_of_particles(NP))
-            allocate(collisionpartners(2,NP**2))
-            allocate(tab_list(NP**2))
+            call init_list()
         end subroutine alloclist
 end module setup

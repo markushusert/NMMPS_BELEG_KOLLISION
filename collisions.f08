@@ -1,7 +1,7 @@
 module collisions
     use type_particle,only: Particle
     use setup,only:k_stoss,Rhop
-    use collision_list,only: collisionpartners,tab_list
+    use collision_list_module, only:collision,collision_list_demo,next_collision
     implicit none
 
     
