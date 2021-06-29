@@ -84,6 +84,10 @@ module linked_list_demo
             print *,"reading value",pointer_to_collision_partners%p%partners,"in position",iter
             next_node=>list_next(next_node)
         end do
+        
+         print *,"die Bedienung der linked list ist aktuell noch etwas unelegant"
+         print *,"ich schreibe als erstes functionen, damit wir die elemente der linked list einfacher erreichen können"
+         print *,"den datentypen würde ich trotzdem sehr gerne verwenden, da er gut für unser problem geeignet ist"
     end subroutine execute_demo
 
 end module linked_list_demo
