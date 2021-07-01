@@ -18,7 +18,6 @@ module collision_list_module
     type(list_t), pointer :: last_collision => null()
 
     integer number_collisions
-    private ::access_ptr!function noch nicht implementier, brauchen wir wohl auch nicht
 
     contains
         subroutine clear_list()
@@ -160,6 +159,15 @@ module collision_list_module
             next_element=>list_next(list_element)
             found_next=ASSOCIATED(next_element)
         end function get_next
+
+        subroutine delete_next(list_element)
+            !returns a pointer to the next element of the list
+            !if found next is false the result must not be used since no next element exists
+            !(end of list reached)
+            type(list_t), pointer,intent(in)::list_element
+     
+            call list_delnext(list_element)
+        end subroutine delete_next
 
         subroutine init_list()
             !inits the start node for both linked lists

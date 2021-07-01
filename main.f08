@@ -43,7 +43,7 @@ program main
 
             call collision_calculation(colliding_particles)
 
-            call collision_update(array_of_particles,next_crash%partners)
+            call collision_update(array_of_particles,next_crash%partners,acctim)
 
         end do
         
