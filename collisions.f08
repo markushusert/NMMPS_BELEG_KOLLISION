@@ -3,7 +3,7 @@ module collisions
     use setup,only:k_stoss,Rhop,NP,dt
     use compile_constants
     use collision_list_module, only:collision,collision_list_demo&
-    ,next_collision,get_collision_list,clear_list,get_next,access_ptr,delete_next
+    ,next_collision,get_collision_list,clear_list,get_next,access_ptr,delete_next,insert_data
     use linked_list, only:list_t
 
     implicit none
@@ -146,6 +146,18 @@ module collisions
             Type(Particle),intent(inout)::colliding_particles(2)
 
             !TODO calculate new velocities of Pcolliding_particles based on the Stoßgesetz
+            !Yvi
+            real, dimension(2) :: vector12, vector21,velocity_vector12
+            vector12 = colliding_particles(2)%Position - colliding_particles(1)%Position
+            velocity_vector12 = colliding_particles(2)%Velocity - colliding_particles(1)%Velocity
+            !source: Ouyang: Particle-motion-resolved discrete model for simulating gas-solid fluidization, 1999
+            colliding_particles(1)%Velocity =  colliding_particles(1)%Velocity + &
+            1.0/2.0 * (1+k_stoss) *  (velocity_vector12 * vector12)/(norm2(vector12))**2 * vector12
+            colliding_particles(2)%Velocity =  colliding_particles(2)%Velocity -&
+             1.0/2.0 * (1+k_stoss) *  (velocity_vector12 * vector12)/(norm2(vector12))**2 * vector12
+
+             !calculate energy_loss
+            !end Yvi
         end subroutine collision_calculation
 
 end module collisions

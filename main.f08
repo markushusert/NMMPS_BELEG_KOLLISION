@@ -16,9 +16,10 @@ program main
     real acctim
 
     !-----------SETUP
-    print *,"starting program"
+    
     call user_input()
     n_steps=floor(t_ges/dt)
+    print *,"starting program, calculating",n_steps,"timesteps"
 
     !-----------MAIN-LOOP
     do iter_step=1,n_steps
@@ -48,6 +49,7 @@ program main
         end do
         
         time=time+dt
+        current_timestep=current_timestep+1
         
         call write_plot_file(array_of_particles)
     end do
