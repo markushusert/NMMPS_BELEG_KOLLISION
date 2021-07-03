@@ -9,5 +9,5 @@ module type_particle
         real,DIMENSION(dim)::Velocity,Position
     end type Particle
     
-    type(Particle),dimension(:),ALLOCATABLE::array_of_particles
+    type(Particle),dimension(:),pointer::array_of_particles
 end module type_particle

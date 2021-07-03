@@ -1,42 +1,35 @@
 module solid_dynamics
-    use type_particle,only: Particle
-    use setup,only:g,dt,NP,areawidth
+    use type_particle,only: Particle,array_of_particles
+    use setup,only:g,dt,NP,areawidth,NB
     use statistics,only:E_kin,E_pot,E_disp
     implicit none
     integer i
 
     contains
-    subroutine move(t_inkrement,particle_array)
+    subroutine move(t_inkrement)
         real,intent(in)::t_inkrement  !duration to advance by
-        Type(Particle),intent(inout)::particle_array(:)
 
         !TODO update position of all particles in particle-array based on t_inkrement
         !Yvi
-        do while (i<=size(particle_array))
-          particle_array(i)%Position = particle_array(i)%Position + particle_array(i)%Velocity * t_inkrement !update position
-          call teleport_particles(particle_array)
+        do i=nb+1,Np
+          array_of_particles(i)%Position = array_of_particles(i)%Position + array_of_particles(i)%Velocity * t_inkrement !update position
+          call teleport_particles()
         end do
         !end Yvi
 
     end subroutine move
 
-    subroutine time_integration(array_of_particles)
+    subroutine time_integration()
         implicit none
-        type(Particle),dimension(:), intent(inout)::array_of_particles
         integer:: counter
-        real:: absolute_velocity
-        real:: deltaE_kin
-        do counter=1,NP
-          array_of_particles(counter)%velocity(2) = real(array_of_particles(counter)%velocity(2))-g*DT
-          absolute_velocity = norm2(array_of_particles(counter)%velocity)
-          deltaE_kin = 0.5*array_of_particles(counter)%masse*absolute_velocity**2
-          E_kin = E_kin + deltaE_kin
+
+        do counter=nb+1,Np
+          array_of_particles(counter)%velocity(2) = real(array_of_particles(counter)%velocity(2))-g*DT      
         end do
     end subroutine time_integration
 
-    subroutine teleport_particles(array_of_particles)
+    subroutine teleport_particles()
         implicit none
-        type(Particle),dimension(:), intent(inout)::array_of_particles
         integer:: counter
         do counter=1,NP
           if(real(array_of_particles(counter)%position(1)) < 0) then
@@ -47,5 +40,19 @@ module solid_dynamics
           endif
         end do
     end subroutine teleport_particles
+
+    subroutine global_energies()
+      implicit none
+      real absolute_velocity
+      integer counter
+
+      E_kin=0.0d0
+      E_pot=0.0d0
+      do counter=Nb+1,Np!do not loop over bootom spheres
+        absolute_velocity = norm2(array_of_particles(counter)%velocity)
+        E_kin = E_kin + 0.5*array_of_particles(counter)%masse*absolute_velocity**2
+        E_pot=g*array_of_particles(counter)%masse*array_of_particles(counter)%position(2)
+      end do
+    end subroutine global_energies
 
 end module solid_dynamics

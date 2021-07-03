@@ -118,15 +118,20 @@ module collision_list_module
             found_next=ASSOCIATED(next_element)
         end function cut_next
 
-        subroutine print_list(list_element)
+        subroutine print_list(list_element,limit)
             !prints all elements in linked list starting after list_element
             type(list_t), pointer,intent(in)::list_element
+            integer,intent(in),optional::limit
             type(list_t), pointer::next_element,current_element,temp
             type(collision),pointer:: data
             logical nextflag,tempflag
+            integer counter
+
 
             current_element=>list_element
+            counter=0
             do 
+                counter=counter+1
                 next_element=>get_next(current_element,nextflag)
                 if (.not.nextflag) then
                     !last element reached
@@ -134,13 +139,25 @@ module collision_list_module
                 end if
                 current_element=>next_element
 
+                
+
                 data=>access_ptr(current_element)
                 if (.not.ASSOCIATED(data)) then
                     print *,"data has not been associated"
                     call exit()
                 end if
+
+
                 temp=>get_next(current_element,nextflag)
-                call print_collision(data)
+                print *,"list_t adress",loc(current_element),"kollision between"&
+                ,data%partners(1),"and",data%partners(2)&
+                ,"at time",data%time
+                
+                if (present(limit)) then
+                    if(counter.eq.limit) then
+                        exit
+                    end if
+                end if
             end do
         end subroutine print_list
         subroutine print_collision(data)
@@ -160,13 +177,19 @@ module collision_list_module
             found_next=ASSOCIATED(next_element)
         end function get_next
 
-        subroutine delete_next(list_element)
+        subroutine delete_next(list_element,next_ele)
             !returns a pointer to the next element of the list
             !if found next is false the result must not be used since no next element exists
             !(end of list reached)
             type(list_t), pointer,intent(in)::list_element
+            type(list_t), pointer,intent(out),optional::next_ele
      
-            call list_delnext(list_element)
+            if (present(next_ele)) then
+                call list_delnext(list_element,next_ele)
+            else
+                call list_delnext(list_element)
+            end if
+            
         end subroutine delete_next
 
         subroutine init_list()

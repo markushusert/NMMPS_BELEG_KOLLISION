@@ -65,11 +65,12 @@ module linked_list
     end subroutine list_free
 
     ! Free the node following after self
-    subroutine list_delnext(self)
+    subroutine list_delnext(self,next_ele)
         type(list_t), pointer :: self
         type(list_t), pointer :: current
         type(list_t), pointer :: next
         type(list_t), pointer :: next_next
+        type(list_t), pointer,optional ::next_ele
     
         !get nodes 1 place and 2 places after self
         current => self
@@ -86,6 +87,9 @@ module linked_list
 
         !fill the gap with node 2 places after
         current%next=>next_next
+        if (present(next_ele)) then
+            next_ele=>current%next
+        end if
 
     end subroutine list_delnext
  

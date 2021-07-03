@@ -1,19 +1,20 @@
 module plot
-  use type_particle,only:Particle
+  use type_particle,only:Particle,array_of_particles
   use setup,only:NP
+  use solid_dynamics,only:global_energies
   use statistics, only:current_timestep, E_kin, E_pot, E_disp
   implicit none
 
   contains
-      subroutine write_plot_file(array_of_particles)
+      subroutine write_plot_file()
           implicit none
-          type(Particle),dimension(:), intent(inout)::array_of_particles
           integer:: counter
           character*8 timestep_string
           character*64 filename, filename_energy
           logical, save :: first_call = .TRUE.
           character*32,parameter::resultdir="results"
 
+          call global_energies()
 
           print *,"writing plot output at timestep",current_timestep
           
@@ -28,6 +29,7 @@ module plot
             call chdir(trim(resultdir))
             open(unit=21, file=filename_energy, status = "replace")
           else
+            call chdir(trim(resultdir))
             open(unit=21, file=filename_energy,status = "old",Position = "append")
           end if
           write(21,*) current_timestep, E_kin, E_pot, E_disp
@@ -41,4 +43,6 @@ module plot
 
           call chdir("../")
       end subroutine write_plot_file
+      
+      
 end module plot
