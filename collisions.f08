@@ -187,7 +187,6 @@ module collisions
 
             current_element=>startpoint_list
             number_collisions=number_collisions+1
-            print *,"inserting collision between",current_collision%partners
             counter=0
             do
                 counter=counter+1
@@ -217,17 +216,9 @@ module collisions
             !1 remove colliding_particles from collision list
             !2 compute new collisions of particle 1 and 2
             !3 insert new collisions in collision list
-            print *,"before_removing",id_of_colliding_parts
-            call print_list(get_collision_list(),43)
             call remove_ids_from_list(id_of_colliding_parts)
-            print *,"after removing",id_of_colliding_parts
-            call print_list(get_collision_list(),43)
             call check_particle_against_all_others(id_of_colliding_parts(1),acctim)
-            print *,"after updating",id_of_colliding_parts(1)
-            call print_list(get_collision_list(),43)
             call check_particle_against_all_others(id_of_colliding_parts(2),acctim)
-            print *,"after updating",id_of_colliding_parts(2)
-            call print_list(get_collision_list(),43)
         end subroutine collision_update
 
         subroutine remove_ids_from_list(id_of_colliding_parts)
@@ -244,12 +235,9 @@ module collisions
                     current_collision=>access_ptr(next_node)
                     do iter=1,2
                         if (any(id_of_colliding_parts.eq.current_collision%partners(iter))) then
-                            print *,"before deleting "
-                            call print_list(current_node,3)
+                           
                             call delete_next(current_node,temp_node)
                             !print *,"association after deletion",ASSOCIATED
-                            print *,"after deleting"
-                            call print_list(current_node,3)
                             number_collisions=number_collisions-1
                             exit
                         end if
