@@ -30,11 +30,15 @@ program main
 
         !-----------EVENT-DRIVEN-HARD-SPHERE
         do 
+            !print *,"next 3 colls"
+            !call print_list(get_collision_list(),3)
             next_crash=next_collision(any_collisions_left)
 
             if (.not.any_collisions_left) then
                 exit !break out of loop
             end if
+
+            call print_collision(next_crash)
             
             call move(next_crash%time-acctim)
 
@@ -43,6 +47,9 @@ program main
             colliding_particles(:)=array_of_particles(next_crash%partners)
 
             call collision_calculation(colliding_particles)
+
+            !colliding_particles was a seperate copy of our array, so we need to update array as well
+            array_of_particles(next_crash%partners)=colliding_particles
 
             call collision_update(next_crash%partners,acctim)
 

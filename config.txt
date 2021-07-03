@@ -1,0 +1,14 @@
+$general
+  n_sphere_in_layer = 20, !number of particles per layer
+  Nb = 50, !number of particles at bottom
+  radius = 1, !radius of particles
+  k_stoss = 1 !coefficient of restitution
+  t_ges=1
+  dt=0.1
+  Rhop=1
+  g=9.81
+  height=5 !height of the lowest layer
+  n_layer=3
+  v_init=-30
+  read_start_positions=T
+$end

@@ -147,12 +147,17 @@ module collision_list_module
                     call exit()
                 end if
 
-
-                temp=>get_next(current_element,nextflag)
-                print *,"list_t adress",loc(current_element),"kollision between"&
+                if (.false.) then
+                    print *,"adress",loc(current_element),"kollision between"&
                 ,data%partners(1),"and",data%partners(2)&
                 ,"at time",data%time
-                
+                else
+                    print *,"counter",counter,"kollision between"&
+                ,data%partners(1),"and",data%partners(2)&
+                ,"at time",data%time
+                    
+                end if
+
                 if (present(limit)) then
                     if(counter.eq.limit) then
                         exit

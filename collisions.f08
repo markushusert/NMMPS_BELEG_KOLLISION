@@ -26,7 +26,7 @@ module collisions
             end do
 
             if (.true.) then
-                call print_list(get_collision_list())
+                !call print_list(get_collision_list())
             end if
         end subroutine collision_detection
         subroutine check_particle_against_all_others(iter,acctim)
@@ -216,9 +216,16 @@ module collisions
             !1 remove colliding_particles from collision list
             !2 compute new collisions of particle 1 and 2
             !3 insert new collisions in collision list
+            
             call remove_ids_from_list(id_of_colliding_parts)
+            !print *,"after removing"
+            !call print_list(get_collision_list(),3)
             call check_particle_against_all_others(id_of_colliding_parts(1),acctim)
+            !print *,"after update1"
+            !call print_list(get_collision_list(),3)
             call check_particle_against_all_others(id_of_colliding_parts(2),acctim)
+            !print *,"after update2"
+            !call print_list(get_collision_list(),3)
         end subroutine collision_update
 
         subroutine remove_ids_from_list(id_of_colliding_parts)
@@ -226,26 +233,51 @@ module collisions
             type(list_t),pointer::current_node,next_node,temp_node
             type(collision),pointer::current_collision
             logical next_element_exists
-            integer iter
+            integer iter,counter
+            logical,parameter:: debug=.false.
+            logical delete_node
 
+            !debug=.false.
+            if (id_of_colliding_parts(1).eq.61 .and. id_of_colliding_parts(2).eq.81) then
+                !debug=.true.
+            end if
             current_node=>get_collision_list()
+            
+            if (debug) then
+                print *,"number_collisions",number_collisions
+                call print_list(get_collision_list())
+            end if
+            counter=0
             do
+                counter=counter+1
                 next_node=>get_next(current_node,next_element_exists)
                 if (next_element_exists) then
+                    
                     current_collision=>access_ptr(next_node)
+                    if (debug) then
+                        !call print_list(current_node,3)
+                        print *,counter,"comparing collision-id",current_collision%partners
+                    end if
+                    delete_node=.false.
                     do iter=1,2
                         if (any(id_of_colliding_parts.eq.current_collision%partners(iter))) then
-                           
-                            call delete_next(current_node,temp_node)
-                            !print *,"association after deletion",ASSOCIATED
-                            number_collisions=number_collisions-1
+                            delete_node=.true.
+                            
                             exit
                         end if
                     end do
+
+                    if (delete_node) then
+                        call delete_next(current_node,temp_node)
+                        number_collisions=number_collisions-1
+                    else
+                        current_node=>get_next(current_node,next_element_exists)
+                    end if      
+                    
                 else
                     exit
                 end if
-                current_node=>get_next(current_node,next_element_exists)
+                
             end do
         end subroutine remove_ids_from_list
 
