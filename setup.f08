@@ -2,6 +2,7 @@ module setup
     use type_particle,only: Particle,array_of_particles
     use collision_list_module,only: init_list
     use compile_constants
+    Use, intrinsic :: iso_fortran_env, Only : iostat_end
     USE ieee_arithmetic
     implicit none
 
@@ -139,16 +140,40 @@ module setup
         end subroutine
 
         subroutine read_init_file()
-          integer iter_particle
+          integer iter_particle,error
           type(particle),pointer::p
           open(25,file=init_filename,status="old")
+          call determine_number_particles()
           do iter_particle=1,Np
             p=>array_of_particles(iter_particle)
             read(25,*) p%masse,p%radius,p%Velocity,p%Position
           end do
           close(25,status="keep")
         end subroutine read_init_file
+        subroutine determine_number_particles()
+          integer error
+          type(particle) p
+          open(25,file=init_filename,status="old")
+          NP=0
+          NB=0
+          do
+            read(25,*,iostat=error) p%masse,p%radius,p%Velocity,p%Position
+            select case(error)
+            case(0)
+              NP=NP+1
+              if (.not. ieee_is_finite(p%masse)) then
+                NB=NB+1
+              end if
+            case(iostat_end)
+              exit
+            case default
+              print *,"error in start-position file"
+              call exit()
+            end select
+          end do
+          close(25,status="keep")
 
+        end subroutine determine_number_particles
         subroutine alloclist()
             !allocates dynamically sized arrays
             allocate(array_of_particles(NP))
