@@ -54,6 +54,8 @@ program main
             call collision_update(next_crash%partners,acctim)
 
         end do
+
+        call move(DT-acctim) !MOVE REMAINING TIME
         
         time=time+dt
         current_timestep=current_timestep+1

@@ -23,7 +23,7 @@ module solid_dynamics
         implicit none
         integer:: counter
 
-        do counter=nb+1,Np
+        do counter=NB+1,Np
           array_of_particles(counter)%velocity(2) = real(array_of_particles(counter)%velocity(2))-g*DT      
         end do
     end subroutine time_integration

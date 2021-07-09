@@ -140,24 +140,32 @@ module setup
         end subroutine
 
         subroutine read_init_file()
-          integer iter_particle,error
+          integer iter_particle
           type(particle),pointer::p
+          character*18 massestring
           open(25,file=init_filename,status="old")
-          call determine_number_particles()
+          call determine_number_particles(25)
+          rewind(25) !go back to start of file
+
           do iter_particle=1,Np
             p=>array_of_particles(iter_particle)
-            read(25,*) p%masse,p%radius,p%Velocity,p%Position
+            read(25,*) massestring,p%radius,p%Velocity,p%Position
+            if (trim(massestring)=="Infinity") then
+              p%masse=infi
+            else
+              read(massestring,*)  p%masse
+            end if
           end do
           close(25,status="keep")
         end subroutine read_init_file
-        subroutine determine_number_particles()
+        subroutine determine_number_particles(filenumber)
+          integer,intent(in)::filenumber
           integer error
           type(particle) p
-          open(25,file=init_filename,status="old")
           NP=0
           NB=0
           do
-            read(25,*,iostat=error) p%masse,p%radius,p%Velocity,p%Position
+            read(filenumber,*,iostat=error) p%masse,p%radius,p%Velocity,p%Position
             select case(error)
             case(0)
               NP=NP+1
@@ -171,7 +179,6 @@ module setup
               call exit()
             end select
           end do
-          close(25,status="keep")
 
         end subroutine determine_number_particles
         subroutine alloclist()
