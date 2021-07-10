@@ -53,6 +53,7 @@ program main
 
             call collision_update(next_crash%partners,acctim)
 
+            !call print_list(get_collision_list())
         end do
 
         call move(DT-acctim) !MOVE REMAINING TIME
