@@ -33,7 +33,7 @@ module collisions
             integer,intent(in)::iter
             real,intent(in)::acctim
             integer iter2
-            do iter2=1,np
+            do iter2=NB+1,np
                 if(.not.iter2.eq.iter) then
                     call process_particles(iter,iter2,acctim)
                 end if
