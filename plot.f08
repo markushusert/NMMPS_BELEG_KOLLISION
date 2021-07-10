@@ -37,7 +37,7 @@ module plot
 
           open(unit=20,file=filename, status = 'replace')
           do counter=1,NP
-              write(20,*) array_of_particles(counter)%Position
+              write(20,*) array_of_particles(counter)%Position,array_of_particles(counter)%radius
           end do
           close(20)
 
