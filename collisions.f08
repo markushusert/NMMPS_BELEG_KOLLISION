@@ -306,7 +306,7 @@ module collisions
             colliding_particles(1)%Velocity =  colliding_particles(1)%Velocity + &
             1.0/(1.0+colliding_particles(1)%masse/colliding_particles(2)%masse)&
             * (1+k_stoss) *  dot_product(velocity_vector12 ,vector12)* vector12
-            colliding_particles(2)%Velocity =  colliding_particles(1)%Velocity - &
+            colliding_particles(2)%Velocity =  colliding_particles(2)%Velocity - &
             1.0/(1.0+colliding_particles(2)%masse/colliding_particles(1)%masse)&
             * (1+k_stoss) *  dot_product(velocity_vector12 ,vector12)* vector12
 
