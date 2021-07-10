@@ -21,7 +21,7 @@ module collisions
             integer iter_1,iter_2
             call clear_list()
 
-            do iter_1=NB+1,NP
+            do iter_1=1,NP
                 call check_particle_against_all_others(iter_1,0.0)
             end do
 
@@ -312,7 +312,9 @@ module collisions
 
              !calculate energy_loss
             E_disp=E_disp+&
-            (1-k_stoss**2)*0.5+dot_product(velocity_vector12 ,vector12)**2&
+            (1-k_stoss**2)*0.5*dot_product(velocity_vector12 ,vector12)**2&
+            /(1/colliding_particles(1)%masse+1/colliding_particles(2)%masse)
+            print *,(1-k_stoss**2)*0.5*dot_product(velocity_vector12 ,vector12)**2&
             /(1/colliding_particles(1)%masse+1/colliding_particles(2)%masse)
             !end Yvi
         end subroutine collision_calculation
