@@ -9,6 +9,7 @@ module setup
     !---------Variables
     integer NP          !number of particles
     integer NB          !number of particles at the bottom
+    integer NB1d
 
     real radius             !radius of particles
     real Rhop           !density of particles
@@ -16,12 +17,15 @@ module setup
     real g              !Erdbeschleunigung
     real dt             !timestep
     real t_ges          !duration
-    real areawidth      !width of simulation area
+    real areawidth(dim-1)      !width of simulation area
     real v_init
     real,parameter::pi=3.14159265
+    real,parameter::wiggle_room=1.0d0!how many radii do the spheres have to be placed in
+    real,parameter::rel_intervall=wiggle_room+2.0d0
     character use_config
     integer i
-    integer iter_layer,iter_place
+    integer iter_1,iter_2
+    integer iter_layer
     integer n,n_sphere_in_layer,n_layer
     real height
     integer, allocatable :: seed(:)
@@ -49,7 +53,9 @@ module setup
     contains
         subroutine user_input()
           logical file_exists
-          
+          integer iter_dim
+          integer iter_dim_temp
+          integer compare_offset
             
             call random_seed(size = n)
            allocate(seed(n))
@@ -60,6 +66,8 @@ module setup
               open (1, file='config.txt', action = 'read')
                 read(1,general)
               close (1)
+              NB1d=NB
+              NB=NB1d**(dim-1)
             else
               print *, 'Enter number of particles in a layer'
               read(*,*) n_sphere_in_layer
@@ -81,10 +89,10 @@ module setup
               read(*,*) g
             end if
             ! end Yvi
-            NP=n_layer*n_sphere_in_layer+NB
-            areawidth=radius*Nb*2
-            if (n_layer.gt.NB/2) then
-              print *,"there cannot be more than NB/2 spheres in a layer"
+            NP=n_layer*n_sphere_in_layer**(dim-1)+NB
+            areawidth=radius*Nb1d*2
+            if (n_layer*2.gt.NB1d) then
+              print *,"there cannot be more than",NB1d/2,"spheres in a layer"
               call exit()
             end if
             !Yvi
@@ -96,28 +104,61 @@ module setup
             !check if start_position file exists
             INQUIRE(FILE=init_filename, EXIST=file_exists)
             if (.not.read_start_positions.or. .not.file_exists) then 
-              print *,"randomly generating particle positions"      
-              do i=1,NB
-                bottom_particle%velocity=[0.0,0.0]
-                bottom_particle%position=[(i-1)*2*radius, 0.0]
-                bottom_particle%radius=radius
-                bottom_particle%masse=infi
-                array_of_particles(i) = bottom_particle
-              end do
-              i=nb
-              do iter_layer=0,n_layer-1
-                do iter_place=0,n_sphere_in_layer-1
-                  i=i+1
-                  call random_number(random_value_x)
+              print *,"randomly generating particle positions"
+              i=0
+              do iter_2=0,NB1d-1
+                if (dim.eq.3 .or.iter_2.eq.0) then
+                  do iter_1=0,NB1d-1
+                    i=i+1
+                    bottom_particle%velocity=0.0
+                    bottom_particle%position=0.0d0
+                    bottom_particle%position(1)=bottom_particle%position(1)+iter_1*2*radius
+                    bottom_particle%position(2)=bottom_particle%position(2)+iter_1*2*radius
+                    bottom_particle%radius=radius
+                    bottom_particle%masse=infi
+                    array_of_particles(i) = bottom_particle
+                  end do
+                end if
+              end do   
 
-                  top_particle%velocity=[0.0,v_init]
-                  start_intervall=radius*2*real(NB)/n_sphere_in_layer*iter_place
-                  length_intervall=radius*2*real(NB)/n_sphere_in_layer
-                  !each particle gets an intervall of NB/n_sphere_in_layer radii in x-direction where it can be placed wherever
-                  top_particle%position=[start_intervall+length_intervall*random_value_x, height+iter_layer*radius*3]
-                  top_particle%radius=radius
-                  top_particle%masse=top_particle%radius**3*pi*4/3*Rhop
-                  array_of_particles(i) = top_particle
+              do iter_layer=0,n_layer-1
+                do iter_2=0,n_sphere_in_layer-1
+                  if (dim.eq.3 .or.iter_2.eq.0) then
+                    do iter_1=0,n_sphere_in_layer-1
+                      i=i+1
+                      top_particle%velocity=0.0d0
+                      top_particle%velocity(dim)=v_init
+                      top_particle%position=0.0d0
+                      top_particle%position(dim)=height+iter_layer*radius*3
+                      do iter_dim=1,dim-1
+                        call random_number(random_value_x)
+                        if (iter_dim.eq.1) then
+                          iter_dim_temp=iter_1
+                          compare_offset=1
+                        else
+                          iter_dim_temp=iter_2
+                          compare_offset=n_sphere_in_layer
+                        end if
+                        length_intervall=areawidth(iter_dim)/n_sphere_in_layer-2*radius
+                        start_intervall=(length_intervall+2*radius)*iter_dim_temp
+                        
+                        !each particle gets an intervall of NB/n_sphere_in_layer radii in x-direction where it can be placed wherever
+                        top_particle%position(iter_dim)=start_intervall+length_intervall*random_value_x
+                        
+                        bottom_particle=array_of_particles(i-compare_offset)
+                        if (iter_2.gt.0 .and.&
+                          abs(top_particle%Position(iter_dim)-bottom_particle%Position(iter_dim)).lt.2*radius) then
+                          
+                          print *,"error in random creation"
+                          print *,"x-position",top_particle%Position(iter_dim),bottom_particle%Position(iter_dim)
+                          call exit()
+                        end if
+                      end do
+                      top_particle%radius=radius
+                      top_particle%masse=top_particle%radius**3*pi*4/3*Rhop
+                      array_of_particles(i) = top_particle
+                    end do
+                  end if
                 end do
               end do
                   

@@ -104,8 +104,9 @@ module collisions
             real,dimension(dim)::rel_pos_temp
             integer,DIMENSION(dim)::direction_vector
             integer iter_dim1,iter_dim2,counter
+            real areawidth3d(dim)
 
-
+            areawidth3d(1:dim-1)=areawidth
             !returns distance between 2 particles in 3 different konfigurations
             !1. no teleportation
             !2. part1 is teleported forward
@@ -119,10 +120,10 @@ module collisions
                     if (dim.eq.3 .or. iter_dim2.eq.0) then
                         !only vary the second dimension if we have a 3d calculation
                         counter=counter+1
-                        direction_vector=[0,0]
+                        direction_vector=0
                         direction_vector(1)=iter_dim1
                         direction_vector(2)=iter_dim2
-                        rel_pos_temp=colliding_particles(2)%Position-colliding_particles(1)%Position+areawidth*direction_vector
+                        rel_pos_temp=colliding_particles(2)%Position-colliding_particles(1)%Position+areawidth3d*direction_vector
                         if (counter.eq.1)then
                             calc_rel_pos(:,1)=rel_pos_temp
                         else
@@ -294,7 +295,7 @@ module collisions
 
             !TODO calculate new velocities of Pcolliding_particles based on the Stoßgesetz
             !Yvi
-            real, dimension(2) :: vector12,velocity_vector12
+            real, dimension(dim) :: vector12,velocity_vector12
             real,dimension(dim,9)::vector12_temp
 
             vector12_temp = calc_rel_pos(colliding_particles)

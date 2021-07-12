@@ -2,6 +2,7 @@ module solid_dynamics
     use type_particle,only: Particle,array_of_particles
     use setup,only:g,dt,NP,areawidth,NB
     use statistics,only:E_kin,E_pot,E_disp
+    use compile_constants
     implicit none
     integer i
 
@@ -24,20 +25,25 @@ module solid_dynamics
         integer:: counter
 
         do counter=NB+1,Np
-          array_of_particles(counter)%velocity(2) = real(array_of_particles(counter)%velocity(2))-g*DT      
+          array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT      
         end do
     end subroutine time_integration
 
     subroutine teleport_particles()
         implicit none
-        integer:: counter
+        integer:: counter,iter_dim
         do counter=1,NP
-          if(real(array_of_particles(counter)%position(1)) < 0) then
-          array_of_particles(counter)%position(1) = real(array_of_particles(counter)%position(1)) + areawidth
-          endif
-          if(real(array_of_particles(counter)%position(1)) > areawidth) then
-          array_of_particles(counter)%position(1) = real(array_of_particles(counter)%position(1)) - areawidth
-          endif
+          do iter_dim=1,dim-1
+            if(real(array_of_particles(counter)%position(iter_dim)) < 0) then
+              array_of_particles(counter)%position(iter_dim) =&
+               real(array_of_particles(counter)%position(iter_dim)) + areawidth(iter_dim)
+              endif
+              if(real(array_of_particles(counter)%position(iter_dim)) > areawidth(iter_dim)) then
+              array_of_particles(counter)%position(iter_dim) =&
+              real(array_of_particles(counter)%position(iter_dim)) - areawidth(iter_dim)
+              endif
+          end do
+         
         end do
     end subroutine teleport_particles
 
