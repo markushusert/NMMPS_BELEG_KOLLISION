@@ -82,7 +82,7 @@ module setup
             end if
             ! end Yvi
             NP=n_layer*n_sphere_in_layer+NB
-            areawidth=radius*Nb
+            areawidth=radius*Nb*2
             if (n_layer.gt.NB/2) then
               print *,"there cannot be more than NB/2 spheres in a layer"
               call exit()
@@ -99,7 +99,7 @@ module setup
               print *,"randomly generating particle positions"      
               do i=1,NB
                 bottom_particle%velocity=[0.0,0.0]
-                bottom_particle%position=[i-1+radius, 0.0]
+                bottom_particle%position=[(i-1)*2*radius, 0.0]
                 bottom_particle%radius=radius
                 bottom_particle%masse=infi
                 array_of_particles(i) = bottom_particle
