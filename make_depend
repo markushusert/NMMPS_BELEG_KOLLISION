@@ -1,5 +1,5 @@
 main.o : main.f08 linked_list_demo.o plot.o statistics.o solid_dynamics.o collisions.o type_particle.o setup.o 
-solid_dynamics.o : solid_dynamics.f08 statistics.o setup.o type_particle.o 
+solid_dynamics.o : solid_dynamics.f08 compile_constants.o statistics.o setup.o type_particle.o 
 collisions.o : collisions.f08 linked_list.o collision_list_module.o statistics.o compile_constants.o setup.o type_particle.o 
 collision_list_module.o : collision_list_module.f08 linked_list.o 
 linked_list.o : linked_list.f08 
