@@ -5,7 +5,7 @@ module solid_dynamics
     use compile_constants
     implicit none
     integer i
-
+    
     contains
     subroutine move(t_inkrement)
         real,intent(in)::t_inkrement  !duration to advance by
@@ -23,6 +23,7 @@ module solid_dynamics
     subroutine time_integration()
         implicit none
         integer:: counter
+        type(Particle),pointer::part_to_watch
 
         do counter=NB+1,Np
           array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT      
@@ -57,7 +58,7 @@ module solid_dynamics
       do counter=Nb+1,Np!do not loop over bootom spheres
         absolute_velocity = norm2(array_of_particles(counter)%velocity)
         E_kin = E_kin + 0.5*array_of_particles(counter)%masse*absolute_velocity**2
-        E_pot=g*array_of_particles(counter)%masse*array_of_particles(counter)%position(2)
+        E_pot=E_pot+g*array_of_particles(counter)%masse*array_of_particles(counter)%position(dim)
       end do
     end subroutine global_energies
 
