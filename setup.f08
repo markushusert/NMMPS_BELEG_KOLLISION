@@ -113,7 +113,7 @@ module setup
                     bottom_particle%velocity=0.0
                     bottom_particle%position=0.0d0
                     bottom_particle%position(1)=bottom_particle%position(1)+iter_1*2*radius
-                    bottom_particle%position(2)=bottom_particle%position(2)+iter_1*2*radius
+                    bottom_particle%position(2)=bottom_particle%position(2)+iter_2*2*radius
                     bottom_particle%radius=radius
                     bottom_particle%masse=infi
                     array_of_particles(i) = bottom_particle
