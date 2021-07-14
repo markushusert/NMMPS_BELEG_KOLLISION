@@ -13,23 +13,34 @@ module solid_dynamics
         !TODO update position of all particles in particle-array based on t_inkrement
         !Yvi
         do i=nb+1,Np
-          array_of_particles(i)%Position = array_of_particles(i)%Position + array_of_particles(i)%Velocity * t_inkrement !update position
-          call teleport_particles()
+          if (array_of_particles(i)%active) then
+            array_of_particles(i)%Position = array_of_particles(i)%Position + array_of_particles(i)%Velocity * t_inkrement !update position
+          end if
         end do
+        call teleport_particles()
         !end Yvi
 
     end subroutine move
 
-    subroutine time_integration()
+    subroutine time_integration(ratio)
         implicit none
+        real,intent(in)::ratio
         integer:: counter
-        type(Particle),pointer::part_to_watch
-
         do counter=NB+1,Np
-          array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT      
+          if (array_of_particles(counter)%active) then
+            array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT*ratio
+          end if
         end do
     end subroutine time_integration
 
+    subroutine update_active_status()
+      integer iter_part
+      do iter_part=nb+1,np
+        if (.false.) then
+          array_of_particles(iter_part)%active=.false.
+        end if
+      end do
+    end subroutine update_active_status
     subroutine teleport_particles()
         implicit none
         integer:: counter,iter_dim

@@ -25,6 +25,7 @@ module setup
     character use_config
     integer i
     integer iter_1,iter_2
+    integer output_inkr
     integer iter_layer
     integer n,n_sphere_in_layer,n_layer
     real height
@@ -43,7 +44,8 @@ module setup
                         height,&
                         n_layer, &
                         v_init,&
-                        read_start_positions
+                        read_start_positions,&
+                        output_inkr
     real                 :: random_value_x, random_value_y
     real infi
     
@@ -63,6 +65,7 @@ module setup
             !print *, 'use config.txt for initialization? y/n'
             !read *, use_config
             if (.true. .or. use_config == "y") then
+              output_inkr=1!default value
               open (1, file='config.txt', action = 'read')
                 read(1,general)
               close (1)
@@ -95,8 +98,7 @@ module setup
               print *,"there cannot be more than",NB1d/2,"spheres in a layer"
               call exit()
             end if
-            !Yvi
-            call alloclist()
+            
             !TODO fill attributes of particles in array_of_particles
             IF (ieee_support_inf(infi)) THEN
               infi = ieee_value(infi,  ieee_positive_inf)
@@ -104,6 +106,8 @@ module setup
             !check if start_position file exists
             INQUIRE(FILE=init_filename, EXIST=file_exists)
             if (.not.read_start_positions.or. .not.file_exists) then 
+              !Yvi
+              call alloclist()
               print *,"randomly generating particle positions"
               i=0
               do iter_2=0,NB1d-1
@@ -116,6 +120,7 @@ module setup
                     bottom_particle%position(2)=bottom_particle%position(2)+iter_2*2*radius
                     bottom_particle%radius=radius
                     bottom_particle%masse=infi
+                    bottom_particle%active=.false.
                     array_of_particles(i) = bottom_particle
                   end do
                 end if
@@ -130,6 +135,7 @@ module setup
                       top_particle%velocity(dim)=v_init
                       top_particle%position=0.0d0
                       top_particle%position(dim)=height+iter_layer*radius*3
+                      top_particle%active=.true.
                       do iter_dim=1,dim-1
                         call random_number(random_value_x)
                         if (iter_dim.eq.1) then
@@ -144,11 +150,9 @@ module setup
                         
                         !each particle gets an intervall of NB/n_sphere_in_layer radii in x-direction where it can be placed wherever
                         top_particle%position(iter_dim)=start_intervall+length_intervall*random_value_x
-                        
+
                         bottom_particle=array_of_particles(i-compare_offset)
-                        if (iter_2.gt.0 .and.&
-                          abs(top_particle%Position(iter_dim)-bottom_particle%Position(iter_dim)).lt.2*radius) then
-                          
+                        if (abs(top_particle%Position(iter_dim)-bottom_particle%Position(iter_dim)).lt.2*radius) then
                           print *,"error in random creation"
                           print *,"x-position",top_particle%Position(iter_dim),bottom_particle%Position(iter_dim)
                           call exit()
@@ -187,14 +191,16 @@ module setup
           open(25,file=init_filename,status="old")
           call determine_number_particles(25)
           rewind(25) !go back to start of file
-
+          call alloclist()
           do iter_particle=1,Np
             p=>array_of_particles(iter_particle)
             read(25,*) massestring,p%radius,p%Velocity,p%Position
             if (trim(massestring)=="Infinity") then
               p%masse=infi
+              p%active=.false.
             else
               read(massestring,*)  p%masse
+              p%active=.true.
             end if
           end do
           close(25,status="keep")

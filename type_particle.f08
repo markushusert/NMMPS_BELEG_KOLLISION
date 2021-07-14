@@ -7,6 +7,7 @@ module type_particle
     type Particle
         real radius,masse
         real,DIMENSION(dim)::Velocity,Position
+        logical active
     end type Particle
     
     type(Particle),dimension(:),pointer::array_of_particles

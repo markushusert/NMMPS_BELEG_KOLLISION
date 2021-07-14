@@ -10,12 +10,13 @@ program main
     USE ieee_arithmetic
 
     implicit none
-    integer::n_steps,iter_step
+    integer::n_steps,iter_step,counter
     type(Particle)::colliding_particles(2)
     type(collision)::next_crash
     logical any_collisions_left
     real,target:: acctim
     real,pointer::temp
+    real dummy
     
     call user_input()
     n_steps=floor(t_ges/dt)
@@ -24,9 +25,10 @@ program main
     !-----------MAIN-LOOP
     do iter_step=1,n_steps
         acctim=0.0
-        call time_integration()
+        call time_integration(0.5)
 
         call collision_detection()
+        call print_list(get_collision_list())
 
         !-----------EVENT-DRIVEN-HARD-SPHERE
         do 
@@ -53,14 +55,24 @@ program main
 
             call collision_update(next_crash%partners,acctim)
 
-            !call print_list(get_collision_list())
+            call print_list(get_collision_list())
+            dummy=0.0
         end do
 
         call move(DT-acctim) !MOVE REMAINING TIME
         
+        call update_active_status()
         time=time+dt
         current_timestep=current_timestep+1
         
+        call time_integration(0.5)
+
+        do counter=1,np
+            if (array_of_particles(counter)%Position(dim).lt.0.0) then
+                print *,"particle",counter,"fell through"
+            end if
+        end do
+
         call write_plot_file()
     end do
 

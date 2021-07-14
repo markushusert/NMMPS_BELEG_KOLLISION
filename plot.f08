@@ -1,6 +1,6 @@
 module plot
   use type_particle,only:Particle,array_of_particles
-  use setup,only:NP
+  use setup,only:NP,output_inkr
   use solid_dynamics,only:global_energies
   use statistics, only:current_timestep, E_kin, E_pot, E_disp
   implicit none
@@ -35,11 +35,13 @@ module plot
           write(21,*) current_timestep, E_kin, E_pot, E_disp
           close (unit=21)
 
-          open(unit=20,file=filename, status = 'replace')
-          do counter=1,NP
-              write(20,*) array_of_particles(counter)%Position,array_of_particles(counter)%radius
-          end do
-          close(20)
+          if (mod(current_timestep,output_inkr).eq.0) then
+            open(unit=20,file=filename, status = 'replace')
+            do counter=1,NP
+                write(20,*) array_of_particles(counter)%Position,array_of_particles(counter)%radius
+            end do
+            close(20)
+          end if
 
           call chdir("../")
       end subroutine write_plot_file

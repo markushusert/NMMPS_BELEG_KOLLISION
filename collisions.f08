@@ -33,7 +33,10 @@ module collisions
             integer,intent(in)::iter
             real,intent(in)::acctim
             integer iter2
-            do iter2=NB+1,np
+            if (iter.le.nb) then
+                return
+            end if
+            do iter2=1,np
                 if(.not.iter2.eq.iter) then
                     call process_particles(iter,iter2,acctim)
                 end if
@@ -45,11 +48,21 @@ module collisions
 
             type(collision)::current_collision
             type(list_t),pointer:: startpoint_list
-            real collision_time
+            real collision_time,distance,dummy
 
             startpoint_list=>get_collision_list()
+            distance=norm2(array_of_particles(iter_1)%Position-array_of_particles(iter_2)%position)
             collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
-            if (collision_time.lt.dt) then
+            if (distance.lt.2) then
+                dummy=0.0
+                collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
+            end if
+            if (collision_time.lt.0.0) then
+                print *,"negative collision time"
+                call exit()
+            end if
+            
+            if (collision_time.lt.dt.and.collision_time.gt.acctim) then
                 
                 current_collision%time=collision_time
                 current_collision%partners=[iter_1,iter_2]
@@ -213,11 +226,12 @@ module collisions
         subroutine collision_update(id_of_colliding_parts,acctim)
             integer,intent(in)::id_of_colliding_parts(2)
             real,intent(in):: acctim
+            logical::debug_output
             !TODO:
             !1 remove colliding_particles from collision list
             !2 compute new collisions of particle 1 and 2
             !3 insert new collisions in collision list
-            
+            debug_output=any(id_of_colliding_parts.eq.60)
             call remove_ids_from_list(id_of_colliding_parts)
             !print *,"after removing"
             !call print_list(get_collision_list(),3)
@@ -227,6 +241,9 @@ module collisions
             call check_particle_against_all_others(id_of_colliding_parts(2),acctim)
             !print *,"after update2"
             !call print_list(get_collision_list(),3)
+            if (debug_output) then
+                call print_list(get_collision_list())
+            end if
         end subroutine collision_update
 
         subroutine remove_ids_from_list(id_of_colliding_parts)
@@ -297,16 +314,21 @@ module collisions
             !Yvi
             real, dimension(dim) :: vector12,velocity_vector12
             real,dimension(dim,9)::vector12_temp
+            real limit
+            real rel_vel
 
             vector12_temp = calc_rel_pos(colliding_particles)
             !shortest possible collision time
             vector12=vector12_temp(:,1)
             vector12=vector12/norm2(vector12)!normalise distance vector
             velocity_vector12 = colliding_particles(2)%Velocity - colliding_particles(1)%Velocity
+            rel_vel=dot_product(velocity_vector12 ,vector12)
             !source: Ouyang: Particle-motion-resolved discrete model for simulating gas-solid fluidization, 1999
+            
             colliding_particles(1)%Velocity =  colliding_particles(1)%Velocity + &
             1.0/(1.0+colliding_particles(1)%masse/colliding_particles(2)%masse)&
-            * (1+k_stoss) *  dot_product(velocity_vector12 ,vector12)* vector12
+            * (1+k_stoss) *  rel_vel* vector12
+            
             colliding_particles(2)%Velocity =  colliding_particles(2)%Velocity - &
             1.0/(1.0+colliding_particles(2)%masse/colliding_particles(1)%masse)&
             * (1+k_stoss) *  dot_product(velocity_vector12 ,vector12)* vector12
