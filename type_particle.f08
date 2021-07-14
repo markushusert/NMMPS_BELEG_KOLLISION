@@ -5,8 +5,8 @@ module type_particle
     implicit none
 
     type Particle
-        real radius,masse
-        real,DIMENSION(dim)::Velocity,Position
+        DOUBLE PRECISION radius,masse
+        DOUBLE PRECISION,DIMENSION(dim)::Velocity,Position
         logical active
     end type Particle
     

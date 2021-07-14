@@ -6,7 +6,7 @@ module collision_list_module
 
     type :: collision
         integer,DIMENSION(2)::partners
-        real time!measured from start of timestep
+        DOUBLE PRECISION time!measured from start of timestep
     end type collision
 
     ! A trick to allow us to store pointers in the list

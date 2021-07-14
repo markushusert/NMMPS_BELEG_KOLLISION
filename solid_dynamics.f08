@@ -8,7 +8,7 @@ module solid_dynamics
     
     contains
     subroutine move(t_inkrement)
-        real,intent(in)::t_inkrement  !duration to advance by
+        DOUBLE PRECISION,intent(in)::t_inkrement  !duration to advance by
 
         !TODO update position of all particles in particle-array based on t_inkrement
         !Yvi
@@ -61,7 +61,7 @@ module solid_dynamics
 
     subroutine global_energies()
       implicit none
-      real absolute_velocity
+      DOUBLE PRECISION absolute_velocity
       integer counter
 
       E_kin=0.0d0

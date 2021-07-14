@@ -22,7 +22,7 @@ module collisions
             call clear_list()
 
             do iter_1=1,NP
-                call check_particle_against_all_others(iter_1,0.0)
+                call check_particle_against_all_others(iter_1,0.0d0)
             end do
 
             if (.true.) then
@@ -31,12 +31,15 @@ module collisions
         end subroutine collision_detection
         subroutine check_particle_against_all_others(iter,acctim)
             integer,intent(in)::iter
-            real,intent(in)::acctim
+            DOUBLE PRECISION,intent(in)::acctim
+            integer lower_limit
             integer iter2
             if (iter.le.nb) then
-                return
+                lower_limit=nb+1
+            else
+                lower_limit=1
             end if
-            do iter2=1,np
+            do iter2=lower_limit,np
                 if(.not.iter2.eq.iter) then
                     call process_particles(iter,iter2,acctim)
                 end if
@@ -44,16 +47,16 @@ module collisions
         end subroutine
         subroutine process_particles(iter_1,iter_2,acctim)
             integer,intent(IN)::iter_1,iter_2
-            real,intent(in)::acctim
+            DOUBLE PRECISION,intent(in)::acctim
 
             type(collision)::current_collision
             type(list_t),pointer:: startpoint_list
-            real collision_time,distance,dummy
+            DOUBLE PRECISION collision_time,distance,dummy
 
             startpoint_list=>get_collision_list()
             distance=norm2(array_of_particles(iter_1)%Position-array_of_particles(iter_2)%position)
             collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
-            if (distance.lt.2) then
+            if (distance.lt.1.9999999d0) then
                 dummy=0.0
                 collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
             end if
@@ -72,14 +75,14 @@ module collisions
         end subroutine process_particles
 
         function calc_collision_time(colliding_particles) result(time)
-            real time
+            DOUBLE PRECISION time
             type(Particle),intent(in)::colliding_particles(2)
-            real,dimension(dim)::rel_vel,current_rel_pos
-            real,dimension(dim,9)::rel_pos
-            real rel_vel_norm
-            real rel_pos_norm
-            real sum_radius
-            real temp_coll_time
+            DOUBLE PRECISION,dimension(dim)::rel_vel,current_rel_pos
+            DOUBLE PRECISION,dimension(dim,9)::rel_pos
+            DOUBLE PRECISION rel_vel_norm
+            DOUBLE PRECISION rel_pos_norm
+            DOUBLE PRECISION sum_radius
+            DOUBLE PRECISION temp_coll_time
             integer iter_config
 
             sum_radius=colliding_particles(1)%radius+colliding_particles(2)%radius
@@ -113,8 +116,8 @@ module collisions
 
         function calc_rel_pos(colliding_particles)
             type(Particle),intent(IN)::colliding_particles(2)
-            real,dimension(dim,9)::calc_rel_pos
-            real,dimension(dim)::rel_pos_temp
+            DOUBLE PRECISION,dimension(dim,9)::calc_rel_pos
+            DOUBLE PRECISION,dimension(dim)::rel_pos_temp
             integer,DIMENSION(dim)::direction_vector
             integer iter_dim1,iter_dim2,counter
             real areawidth3d(dim)
@@ -218,20 +221,22 @@ module collisions
             end do
             list_correct=check_list(startpoint_list,wrong_member)
             if (.not.list_correct) then
+                print *,"error in collision list"
                 call print_list(startpoint_list,wrong_member)
+                call exit()
             end if
             !call print_list(startpoint_list)
         end subroutine insert_collision_to_list
 
         subroutine collision_update(id_of_colliding_parts,acctim)
             integer,intent(in)::id_of_colliding_parts(2)
-            real,intent(in):: acctim
+            DOUBLE PRECISION,intent(in):: acctim
             logical::debug_output
             !TODO:
             !1 remove colliding_particles from collision list
             !2 compute new collisions of particle 1 and 2
             !3 insert new collisions in collision list
-            debug_output=any(id_of_colliding_parts.eq.60)
+            debug_output=.false.
             call remove_ids_from_list(id_of_colliding_parts)
             !print *,"after removing"
             !call print_list(get_collision_list(),3)
@@ -312,10 +317,10 @@ module collisions
 
             !TODO calculate new velocities of Pcolliding_particles based on the Stoßgesetz
             !Yvi
-            real, dimension(dim) :: vector12,velocity_vector12
-            real,dimension(dim,9)::vector12_temp
-            real limit
-            real rel_vel
+            DOUBLE PRECISION, dimension(dim) :: vector12,velocity_vector12
+            DOUBLE PRECISION,dimension(dim,9)::vector12_temp
+            DOUBLE PRECISION limit
+            DOUBLE PRECISION rel_vel
 
             vector12_temp = calc_rel_pos(colliding_particles)
             !shortest possible collision time

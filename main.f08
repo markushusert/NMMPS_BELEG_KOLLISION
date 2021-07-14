@@ -14,7 +14,7 @@ program main
     type(Particle)::colliding_particles(2)
     type(collision)::next_crash
     logical any_collisions_left
-    real,target:: acctim
+    DOUBLE PRECISION,target:: acctim
     real,pointer::temp
     real dummy
     
@@ -24,21 +24,24 @@ program main
    
     !-----------MAIN-LOOP
     do iter_step=1,n_steps
-        acctim=0.0
+        acctim=0.0d0
+        counted_collisions=0
         call time_integration(0.5)
 
         call collision_detection()
-        call print_list(get_collision_list())
+        !call print_list(get_collision_list())
 
         !-----------EVENT-DRIVEN-HARD-SPHERE
         do 
             !print *,"next 3 colls"
             !call print_list(get_collision_list(),3)
             next_crash=next_collision(any_collisions_left)
+            
 
             if (.not.any_collisions_left) then
                 exit !break out of loop
             end if
+            counted_collisions=counted_collisions+1
 
             call print_collision(next_crash)
             
@@ -55,7 +58,6 @@ program main
 
             call collision_update(next_crash%partners,acctim)
 
-            call print_list(get_collision_list())
             dummy=0.0
         end do
 
