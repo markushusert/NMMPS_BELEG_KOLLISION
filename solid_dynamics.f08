@@ -25,10 +25,17 @@ module solid_dynamics
     subroutine time_integration(ratio)
         implicit none
         real,intent(in)::ratio
+        DOUBLE PRECISION vely
         integer:: counter
         do counter=NB+1,Np
           if (array_of_particles(counter)%active) then
-            array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT*ratio
+            if (.true.) then!this somehow prevenst rounding errors
+              vely=array_of_particles(counter)%velocity(dim)
+              vely=vely-g*DT*ratio
+              array_of_particles(counter)%velocity(dim)=vely
+            else
+              array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT*ratio
+            end if
           end if
         end do
     end subroutine time_integration
