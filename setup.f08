@@ -13,10 +13,10 @@ module setup
 
     real radius             !radius of particles
     real Rhop           !density of particles
-    real k_stoss        !Stoßzahl
-    real g              !Erdbeschleunigung
-    real dt             !timestep
-    real t_ges          !duration
+    DOUBLE PRECISION k_stoss        !Stoßzahl
+    DOUBLE PRECISION g              !Erdbeschleunigung
+    DOUBLE PRECISION dt             !timestep
+    DOUBLE PRECISION t_ges          !duration
     real areawidth(dim-1)      !width of simulation area
     real v_init
     real,parameter::pi=3.14159265
