@@ -1,8 +1,8 @@
 module collisions
     use type_particle,only: Particle,array_of_particles
-    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB
+    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB,g
     use compile_constants
-    use statistics,only:E_disp
+    use statistics,only:E_disp,E_num
     use ieee_arithmetic
     use collision_list_module, only:collision,collision_list_demo&
     ,next_collision,get_collision_list,clear_list,get_next,access_ptr,delete_next,insert_data&
@@ -312,13 +312,15 @@ module collisions
 
         end subroutine
 
-        subroutine collision_calculation(colliding_particles)
+        subroutine collision_calculation(colliding_particles,acctim)
             Type(Particle),intent(inout)::colliding_particles(2)
 
             !TODO calculate new velocities of Pcolliding_particles based on the Stoßgesetz
             !Yvi
-            DOUBLE PRECISION, dimension(dim) :: vector12,velocity_vector12
+            DOUBLE PRECISION,intent(in)::acctim
+            DOUBLE PRECISION, dimension(dim) :: vector12,velocity_vector12,v_inkr
             DOUBLE PRECISION,dimension(dim,9)::vector12_temp
+            integer i
             DOUBLE PRECISION limit
             DOUBLE PRECISION rel_vel
 
@@ -326,19 +328,32 @@ module collisions
             !shortest possible collision time
             vector12=vector12_temp(:,1)
             vector12=vector12/norm2(vector12)!normalise distance vector
+
+            
             velocity_vector12 = colliding_particles(2)%Velocity - colliding_particles(1)%Velocity
             rel_vel=dot_product(velocity_vector12 ,vector12)
-            !source: Ouyang: Particle-motion-resolved discrete model for simulating gas-solid fluidization, 1999
             
-            colliding_particles(1)%Velocity =  colliding_particles(1)%Velocity + &
-            1.0/(1.0+colliding_particles(1)%masse/colliding_particles(2)%masse)&
-            * (1+k_stoss) *  rel_vel* vector12
-            
-            colliding_particles(2)%Velocity =  colliding_particles(2)%Velocity - &
-            1.0/(1.0+colliding_particles(2)%masse/colliding_particles(1)%masse)&
-            * (1+k_stoss) *  dot_product(velocity_vector12 ,vector12)* vector12
+            do i=1,2
+                if (i.eq.1) then
+                    !source: Ouyang: Particle-motion-resolved discrete model for simulating gas-solid fluidization, 1999
+                    v_inkr=1.0/(1.0+colliding_particles(1)%masse/colliding_particles(2)%masse)&
+                    * (1+k_stoss) *  rel_vel* vector12
+                else
+                    v_inkr=-1.0/(1.0+colliding_particles(2)%masse/colliding_particles(1)%masse)&
+                    * (1+k_stoss) *  rel_vel* vector12
+                end if
 
-             !calculate energy_loss
+                colliding_particles(i)%Velocity =  colliding_particles(i)%Velocity + v_inkr
+
+                if(IEEE_IS_FINITE(colliding_particles(i)%masse)) then
+                    E_num=E_num&
+                    +v_inkr(dim)*g*colliding_particles(i)%masse*(-(dt-acctim)+dt*0.5)
+                    !-v_inkr(dim)*g*(dt-acctim)*colliding_particles(i)%masse  !delta Epot
+                end if
+                
+            end do
+
+            !calculate energy_loss
             E_disp=E_disp+&
             (1-k_stoss**2)*0.5*dot_product(velocity_vector12 ,vector12)**2&
             /(1/colliding_particles(1)%masse+1/colliding_particles(2)%masse)

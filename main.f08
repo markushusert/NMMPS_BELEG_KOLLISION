@@ -16,8 +16,11 @@ program main
     logical any_collisions_left
     DOUBLE PRECISION,target:: acctim
     real,pointer::temp
+    DOUBLE PRECISION ::epot_old,ekin_old
     real dummy
     
+    epot_old=E_POT
+    ekin_old=E_kin
     call user_input()
     n_steps=floor(t_ges/dt)
     print *,"starting program, calculating",n_steps,"timesteps"
@@ -29,7 +32,6 @@ program main
         call time_integration(0.5)
 
         call collision_detection()
-        !call print_list(get_collision_list())
 
         !-----------EVENT-DRIVEN-HARD-SPHERE
         do 
@@ -44,14 +46,25 @@ program main
             counted_collisions=counted_collisions+1
 
             call print_collision(next_crash)
+
+            epot_old=E_POT
+            ekin_old=E_kin
+            call global_energies()
             
             call move(next_crash%time-acctim)
 
+            if (.false.) then
+                epot_old=E_POT
+                ekin_old=E_kin
+                call global_energies()
+                print *,"delta E_kin epot during move",epot_old-E_POT
+            end if
+            
             acctim=next_crash%time
             
             colliding_particles(:)=array_of_particles(next_crash%partners)
 
-            call collision_calculation(colliding_particles)
+            call collision_calculation(colliding_particles,acctim)
 
             !colliding_particles was a seperate copy of our array, so we need to update array as well
             array_of_particles(next_crash%partners)=colliding_particles
@@ -60,16 +73,24 @@ program main
 
             dummy=0.0
         end do
-
-        call move(DT-acctim) !MOVE REMAINING TIME
         
+        call move(DT-acctim)
+
+        if (.false.) then
+            epot_old=E_POT
+            ekin_old=E_kin
+            call global_energies()
+            print *,"delta E_kin epot during remaining timestep",epot_old-E_POT
+        end if
+       
         call update_active_status()
+        
         time=time+dt
         current_timestep=current_timestep+1
         
         call time_integration(0.5)
 
-        do counter=1,np
+        do counter=nb+1,np
             if (array_of_particles(counter)%Position(dim).lt.0.0) then
                 print *,"particle",counter,"fell through"
             end if

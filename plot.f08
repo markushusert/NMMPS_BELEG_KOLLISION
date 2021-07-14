@@ -2,7 +2,7 @@ module plot
   use type_particle,only:Particle,array_of_particles
   use setup,only:NP,output_inkr
   use solid_dynamics,only:global_energies
-  use statistics, only:current_timestep, E_kin, E_pot, E_disp,counted_collisions
+  use statistics, only:current_timestep, E_kin,E_num, E_pot, E_disp,counted_collisions
   implicit none
 
   contains
@@ -32,14 +32,15 @@ module plot
             call chdir(trim(resultdir))
             open(unit=21, file=filename_energy,status = "old",Position = "append")
           end if
-          write(21,*) current_timestep, E_kin, E_pot, E_disp ,&
-          E_kin+ E_pot+ E_disp,counted_collisions
+          write(21,*) current_timestep, E_kin, E_pot, E_disp ,E_num,&
+          E_kin+ E_pot+ E_disp+E_num,counted_collisions
           close (unit=21)
 
           if (mod(current_timestep,output_inkr).eq.0) then
             open(unit=20,file=filename, status = 'replace')
             do counter=1,NP
-                write(20,*) array_of_particles(counter)%Position,array_of_particles(counter)%radius
+                write(20,*) array_of_particles(counter)%Position,array_of_particles(counter)%radius,&
+                array_of_particles(counter)%Velocity
             end do
             close(20)
           end if
