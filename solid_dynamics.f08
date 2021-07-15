@@ -1,6 +1,6 @@
 module solid_dynamics
     use type_particle,only: Particle,array_of_particles
-    use setup,only:g,dt,NP,areawidth,NB
+    use setup,only:g,dt,NP,areawidth,NB,use_activation
     use statistics,only:E_kin,E_pot,E_disp
     use compile_constants
     implicit none
@@ -42,9 +42,25 @@ module solid_dynamics
 
     subroutine update_active_status()
       integer iter_part
+      DOUBLE PRECISION E_kin_single
+      DOUBLE PRECISION E_pot_single
+      DOUBLE PRECISION E_ges
+      DOUBLE PRECISION E_lim
+
+      if (.not.use_activation) then
+        return
+      end if
+      
       do iter_part=nb+1,np
-        if (.false.) then
+        E_lim=g*array_of_particles(iter_part)%masse*&
+        (array_of_particles(iter_part)%radius+array_of_particles(1)%radius)
+        E_kin_single = (array_of_particles(iter_part)%velocity(1)**2 + array_of_particles(iter_part)%velocity(2)**2)&
+         * 0.5 * array_of_particles(iter_part)%masse
+        E_pot_single = array_of_particles(iter_part)%masse * g * array_of_particles(iter_part)%position(2)
+        E_ges = E_kin_single + E_pot_single
+        if (E_ges < E_lim) then
           array_of_particles(iter_part)%active=.false.
+          array_of_particles(iter_part)%Velocity=0.0d0
         end if
       end do
     end subroutine update_active_status

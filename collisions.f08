@@ -1,6 +1,6 @@
 module collisions
     use type_particle,only: Particle,array_of_particles
-    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB,g
+    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB,g,mod_collision_calc,infi
     use compile_constants
     use statistics,only:E_disp,E_num
     use ieee_arithmetic
@@ -39,6 +39,7 @@ module collisions
             else
                 lower_limit=1
             end if
+
             do iter2=lower_limit,np
                 if(.not.iter2.eq.iter) then
                     call process_particles(iter,iter2,acctim)
@@ -321,7 +322,6 @@ module collisions
             DOUBLE PRECISION, dimension(dim) :: vector12,velocity_vector12,v_inkr
             DOUBLE PRECISION,dimension(dim,9)::vector12_temp
             integer i
-            DOUBLE PRECISION limit
             DOUBLE PRECISION rel_vel
 
             vector12_temp = calc_rel_pos(colliding_particles)
@@ -331,6 +331,15 @@ module collisions
 
             
             velocity_vector12 = colliding_particles(2)%Velocity - colliding_particles(1)%Velocity
+            
+            if (mod_collision_calc.eq.1) then
+                if (colliding_particles(1)%Masse.eq.infi) then
+                    velocity_vector12(dim) = colliding_particles(2)%Velocity(dim)-g*(acctim-dt/2)
+                else if (colliding_particles(2)%Masse.eq.infi) then
+                    velocity_vector12(dim) = colliding_particles(1)%Velocity(dim)-g*(acctim-dt/2)
+                end if
+            end if
+            
             rel_vel=dot_product(velocity_vector12 ,vector12)
             
             do i=1,2
@@ -345,12 +354,13 @@ module collisions
 
                 colliding_particles(i)%Velocity =  colliding_particles(i)%Velocity + v_inkr
 
+                !only consider energy of spheres without infinite mass
                 if(IEEE_IS_FINITE(colliding_particles(i)%masse)) then
                     E_num=E_num&
                     +v_inkr(dim)*g*colliding_particles(i)%masse*(-(dt-acctim)+dt*0.5)
                     !-v_inkr(dim)*g*(dt-acctim)*colliding_particles(i)%masse  !delta Epot
                 end if
-                
+                colliding_particles(i)%active=.true.
             end do
 
             !calculate energy_loss

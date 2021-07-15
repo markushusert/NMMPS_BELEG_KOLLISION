@@ -13,10 +13,16 @@ module setup
 
     real radius             !radius of particles
     real Rhop           !density of particles
+    DOUBLE PRECISION E_Lim
     DOUBLE PRECISION k_stoss        !Stoßzahl
     DOUBLE PRECISION g              !Erdbeschleunigung
     DOUBLE PRECISION dt             !timestep
     DOUBLE PRECISION t_ges          !duration
+    DOUBLE PRECISION rho_layer(10)   !rho for eeach layer
+    DOUBLE PRECISION rho_to_use
+    DOUBLE precision mass_mean
+    logical use_activation
+    integer mod_collision_calc
     real areawidth(dim-1)      !width of simulation area
     real v_init
     real,parameter::pi=3.14159265
@@ -45,7 +51,10 @@ module setup
                         n_layer, &
                         v_init,&
                         read_start_positions,&
-                        output_inkr
+                        output_inkr,&
+                        rho_layer,&
+                        use_activation,&
+                        mod_collision_calc
     real                 :: random_value_x, random_value_y
     real infi
     
@@ -59,6 +68,7 @@ module setup
           integer iter_dim_temp
           integer compare_offset
             
+          mass_mean=0.0d0
             call random_seed(size = n)
            allocate(seed(n))
            call random_seed(get = seed)
@@ -66,6 +76,8 @@ module setup
             !read *, use_config
             if (.true. .or. use_config == "y") then
               output_inkr=1!default value
+              use_activation=.false. !default
+              mod_collision_calc=0 !default
               open (1, file='config.txt', action = 'read')
                 read(1,general)
               close (1)
@@ -127,6 +139,11 @@ module setup
               end do   
 
               do iter_layer=0,n_layer-1
+                if (rho_layer(iter_layer+1).gt.0.0d0) then
+                  rho_to_use=rho_layer(iter_layer+1)
+                else
+                  rho_to_use=Rhop
+                end if
                 do iter_2=0,n_sphere_in_layer-1
                   if (dim.eq.3 .or.iter_2.eq.0) then
                     do iter_1=0,n_sphere_in_layer-1
@@ -159,7 +176,8 @@ module setup
                         end if
                       end do
                       top_particle%radius=radius
-                      top_particle%masse=top_particle%radius**3*pi*4/3*Rhop
+                      top_particle%masse=top_particle%radius**3*pi*4/3*rho_to_use
+                      mass_mean=mass_mean+top_particle%masse/NP
                       array_of_particles(i) = top_particle
                     end do
                   end if
@@ -202,6 +220,7 @@ module setup
               read(massestring,*)  p%masse
               p%active=.true.
             end if
+            mass_mean=mass_mean+p%masse/NP
           end do
           close(25,status="keep")
         end subroutine read_init_file

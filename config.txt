@@ -1,5 +1,5 @@
 $general
-  n_sphere_in_layer = 20, !number of particles per layer
+  n_sphere_in_layer = 30, !number of particles per layer
   Nb = 50, !number of particles at bottom
   radius = 1, !radius of particles
   k_stoss = 0.5 !coefficient of restitution
@@ -8,8 +8,15 @@ $general
   Rhop=1    !density
   g=9.81
   height=5 !height of the lowest layer
-  n_layer=3 !number of layers of spheres
+  n_layer=5 !number of layers of spheres
   v_init=-0 !starting velocity in y-direction
   read_start_positions=F  !T(rue) or F(alse), soll starting_positions.txt gelesen werden
   output_inkr=1  !bei jedem wievielten schritt ein output erstellt werden soll
+  rho_layer(1)=1
+  rho_layer(2)=1
+  rho_layer(3)=4
+  rho_layer(4)=4
+  rho_layer(5)=4
+  use_activation=T  !soll active status der kugeln verwendet werden
+  mod_collision_calc= 0   !modifizierte collisionsberechnung, 0=nichts, 1=nach ivy, andere zahlen noch nicht vergeebn
 $end
