@@ -32,7 +32,7 @@ module plot
             call chdir(trim(resultdir))
             open(unit=21, file=filename_energy,status = "old",Position = "append")
           end if
-          write(21,*) current_timestep, E_kin, E_pot, E_disp ,E_num,&
+          write(21,*) current_timestep, E_kin, E_pot, E_disp ,E_num,E_disp+E_num,&
           E_kin+ E_pot+ E_disp+E_num,counted_collisions
           close (unit=21)
 
