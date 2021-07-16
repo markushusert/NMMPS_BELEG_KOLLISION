@@ -6,8 +6,8 @@ module type_particle
 
     type Particle
         DOUBLE PRECISION radius,masse
-        DOUBLE PRECISION,DIMENSION(dim)::Velocity,Position
-        logical active
+        DOUBLE PRECISION,DIMENSION(dim)::Velocity,Position,Force
+        logical active,use_soft_sphere
     end type Particle
     
     type(Particle),dimension(:),pointer::array_of_particles

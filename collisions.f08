@@ -1,6 +1,6 @@
 module collisions
     use type_particle,only: Particle,array_of_particles
-    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB,g,mod_collision_calc,infi
+    use setup,only:k_stoss,Rhop,NP,dt,areawidth,NB,g,mod_collision_calc,infi,use_soft_sphere,turn_of_hard_sphere
     use compile_constants
     use statistics,only:E_disp,E_num
     use ieee_arithmetic
@@ -29,6 +29,65 @@ module collisions
                 !call print_list(get_collision_list())
             end if
         end subroutine collision_detection
+        subroutine set_softsphere_flag()
+            integer iter
+            do iter=nb+1,np
+                if (norm2(array_of_particles(iter)%Velocity).lt.g*dt) then
+                    array_of_particles(iter)%use_soft_sphere=.true.
+                else
+                    array_of_particles(iter)%use_soft_sphere=.false.
+                end if
+            end do
+        end subroutine set_softsphere_flag
+        subroutine apply_soft_sphere_force()
+            integer iter_1,iter_2
+            DOUBLE PRECISION sum_radius,distance,distance_vec(dim),intrusion
+            do iter_1=1,np
+                array_of_particles(iter_1)%force=0.0d0
+            end do
+            do iter_1=1,np
+                do iter_2=nb+1,np
+                    if (iter_2.ne.iter_1) then
+                        sum_radius=array_of_particles(iter_1)%radius+array_of_particles(iter_2)%radius
+                        distance_vec=array_of_particles(iter_1)%Position-array_of_particles(iter_2)%Position
+                        distance=norm2(distance_vec)
+                        intrusion=sum_radius-distance
+                        if (distance.lt.sum_radius) then
+                            
+                            call set_force_in_particles(iter_1,iter_2,distance_vec/distance,intrusion)
+                        end if
+                    end if
+                end do
+            end do
+        end subroutine apply_soft_sphere_force
+        subroutine set_force_in_particles(iter_1,iter_2,direction,intrusion)
+            !direction is pointing form 2 to 1
+            integer,intent(in)::iter_1,iter_2
+            DOUBLE PRECISION,intent(in)::direction(dim),intrusion
+            double precision::stiffness,mass_to_use
+            DOUBLE PRECISION::allowed_intrusion_rel=0.95d0
+            type(Particle),pointer::p1,p2
+
+            if (use_soft_sphere.eq.0) return
+
+            print *,"applying soft-sphere force between particles",iter_1,iter_2
+            p1=>array_of_particles(iter_1)
+            p2=>array_of_particles(iter_2)
+            if (use_soft_sphere.eq.1) then
+                !does not work, based on critcal timestep
+                stiffness=4/dt**2*(1/(1/p1%masse+1/p2%masse))*0.01
+            elseif(use_soft_sphere.eq.2) then
+                if((p1%masse>p2%masse.and. ieee_is_finite(p1%masse)).or. .not.ieee_is_finite(p2%masse)) then
+                    mass_to_use=p1%masse
+                else
+                    mass_to_use=p2%masse
+                end if
+                stiffness=g*mass_to_use/min(p1%radius,p2%radius)/(1.0-allowed_intrusion_rel)
+            end if
+            p1%Force=p1%Force+direction*stiffness*intrusion
+            p2%Force=p2%Force-direction*stiffness*intrusion
+
+        end subroutine set_force_in_particles
         subroutine check_particle_against_all_others(iter,acctim)
             integer,intent(in)::iter
             DOUBLE PRECISION,intent(in)::acctim
@@ -52,14 +111,20 @@ module collisions
 
             type(collision)::current_collision
             type(list_t),pointer:: startpoint_list
-            DOUBLE PRECISION collision_time,distance,dummy
+            DOUBLE PRECISION collision_time,distance,dummy,sum_radius
 
             startpoint_list=>get_collision_list()
+            if(array_of_particles(iter_1)%use_soft_sphere.and.array_of_particles(iter_1)%use_soft_sphere&
+            .and.use_soft_sphere.ne.0.and.turn_of_hard_sphere) then
+                return
+            end if
+
             distance=norm2(array_of_particles(iter_1)%Position-array_of_particles(iter_2)%position)
             collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
-            if (distance.lt.1.9999999d0) then
-                dummy=0.0
-                collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
+            collision_time=collision_time!slightly reduce collision time to avoid intrusions
+            if (distance.lt.sum_radius .and. acctim .eq.0.0d0) then
+                !dummy=0.0
+                !collision_time=calc_collision_time([array_of_particles(iter_1),array_of_particles(iter_2)])+acctim
             end if
             if (collision_time.lt.0.0) then
                 print *,"negative collision time"
@@ -110,6 +175,10 @@ module collisions
                     if (.not.temp_coll_time.gt.time) then
                         time=temp_coll_time
                     end if
+                elseif(temp_coll_time.lt.dt .and.temp_coll_time.gt.-dt*0.0001d0&
+                    .and.rel_pos_norm.lt.sum_radius) then
+                    !print *,"should maybe step back"
+
                 end if
                 
             end do
@@ -164,17 +233,18 @@ module collisions
             type(list_t),pointer::current_element,next_element
             logical check_list
             logical next_ele_exists
-            integer*8 used_adresses(1000)
+            integer,parameter::maxlen=1000
+            integer*8 used_adresses(maxlen)
             integer counter
+            
 
             counter=0
             current_element=>startpoint_list
             used_adresses=0
             check_list=.true.
-            do
+            do counter=1,maxlen
                 next_element=>get_next(current_element,next_ele_exists)
                 if (next_ele_exists) then
-                    counter=counter+1
                     if (any(used_adresses(1:counter).eq.loc(next_element))) then
                         print *,"found error at collision",counter
                         !call print_list(startpoint_list)

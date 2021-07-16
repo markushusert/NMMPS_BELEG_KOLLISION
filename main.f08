@@ -29,6 +29,8 @@ program main
     do iter_step=1,n_steps
         acctim=0.0d0
         counted_collisions=0
+
+        call set_softsphere_flag()
         call time_integration(0.5)
 
         call collision_detection()
@@ -88,6 +90,8 @@ program main
         time=time+dt
         current_timestep=current_timestep+1
         
+        call apply_soft_sphere_force()
+
         call time_integration(0.5)
 
         do counter=nb+1,np

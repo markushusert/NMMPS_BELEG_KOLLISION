@@ -25,17 +25,15 @@ module solid_dynamics
     subroutine time_integration(ratio)
         implicit none
         real,intent(in)::ratio
-        DOUBLE PRECISION vely
+        DOUBLE PRECISIOn delta_v(dim)
         integer:: counter
         do counter=NB+1,Np
+          delta_v=0.0d0
           if (array_of_particles(counter)%active) then
-            if (.true.) then!this somehow prevenst rounding errors
-              vely=array_of_particles(counter)%velocity(dim)
-              vely=vely-g*DT*ratio
-              array_of_particles(counter)%velocity(dim)=vely
-            else
-              array_of_particles(counter)%velocity(dim) = real(array_of_particles(counter)%velocity(dim))-g*DT*ratio
-            end if
+            delta_v(dim)=-g*DT
+            delta_v=delta_v+array_of_particles(counter)%Force/array_of_particles(counter)%masse*dt
+            delta_v=delta_v*ratio
+            array_of_particles(counter)%velocity=array_of_particles(counter)%velocity+delta_v
           end if
         end do
     end subroutine time_integration
@@ -69,13 +67,13 @@ module solid_dynamics
         integer:: counter,iter_dim
         do counter=1,NP
           do iter_dim=1,dim-1
-            if(real(array_of_particles(counter)%position(iter_dim)) < 0) then
+            if(array_of_particles(counter)%position(iter_dim) < 0) then
               array_of_particles(counter)%position(iter_dim) =&
-               real(array_of_particles(counter)%position(iter_dim)) + areawidth(iter_dim)
+               array_of_particles(counter)%position(iter_dim) + areawidth(iter_dim)
               endif
-              if(real(array_of_particles(counter)%position(iter_dim)) > areawidth(iter_dim)) then
+              if(array_of_particles(counter)%position(iter_dim) > areawidth(iter_dim)) then
               array_of_particles(counter)%position(iter_dim) =&
-              real(array_of_particles(counter)%position(iter_dim)) - areawidth(iter_dim)
+              array_of_particles(counter)%position(iter_dim) - areawidth(iter_dim)
               endif
           end do
          

@@ -36,7 +36,8 @@ module setup
     integer n,n_sphere_in_layer,n_layer
     real height
     integer, allocatable :: seed(:)
-    logical read_start_positions
+    logical read_start_positions,turn_of_hard_sphere
+    integer use_soft_sphere
     real length_intervall,start_intervall
     type(Particle) :: bottom_particle, top_particle
     namelist /general/  n_sphere_in_layer, & !number of particles
@@ -54,7 +55,9 @@ module setup
                         output_inkr,&
                         rho_layer,&
                         use_activation,&
-                        mod_collision_calc
+                        mod_collision_calc,&
+                        use_soft_sphere,&
+                        turn_of_hard_sphere
     real                 :: random_value_x, random_value_y
     real infi
     
@@ -77,6 +80,8 @@ module setup
             if (.true. .or. use_config == "y") then
               output_inkr=1!default value
               use_activation=.false. !default
+              turn_of_hard_sphere=.false.
+              use_soft_sphere=0
               mod_collision_calc=0 !default
               open (1, file='config.txt', action = 'read')
                 read(1,general)
@@ -133,6 +138,7 @@ module setup
                     bottom_particle%radius=radius
                     bottom_particle%masse=infi
                     bottom_particle%active=.false.
+                    bottom_particle%use_soft_sphere=.true. !set to true since both partners need to be true for soft sphere
                     array_of_particles(i) = bottom_particle
                   end do
                 end if
@@ -177,7 +183,7 @@ module setup
                       end do
                       top_particle%radius=radius
                       top_particle%masse=top_particle%radius**3*pi*4/3*rho_to_use
-                      mass_mean=mass_mean+top_particle%masse/NP
+                      mass_mean=mass_mean+top_particle%masse/(NP-NB)
                       array_of_particles(i) = top_particle
                     end do
                   end if
@@ -220,7 +226,8 @@ module setup
               read(massestring,*)  p%masse
               p%active=.true.
             end if
-            mass_mean=mass_mean+p%masse/NP
+            p%Force=0.0d0
+            if (iter_particle.gt.nb) mass_mean=mass_mean+p%masse/(NP-NB)            
           end do
           close(25,status="keep")
         end subroutine read_init_file
@@ -248,8 +255,14 @@ module setup
 
         end subroutine determine_number_particles
         subroutine alloclist()
+          integer iter
             !allocates dynamically sized arrays
             allocate(array_of_particles(NP))
             call init_list()
+            do iter=1,np
+              array_of_particles(iter)%use_soft_sphere=.false.
+              array_of_particles(iter)%Force=0.0d0
+              array_of_particles(iter)%active=.true.
+            end do
         end subroutine alloclist
 end module setup
